@@ -3,6 +3,25 @@
 > Mis à jour à chaque fin de session. La section « Journal » en bas garde
 > l'historique.
 
+## Pour reprendre le fil (lire en premier)
+
+- **Tout ce qui existe a été construit par Claude Code.** L'utilisateur n'a pas
+  encore manipulé l'outil lui-même. Il n'a donc pas la même sensibilité aux
+  questions en suspens que l'agent qui a écrit le code. C'est normal, et c'est
+  la même raison que pour l'ADR 0004 : on tranche mieux après avoir pratiqué.
+- **Conséquence pour l'agent qui reprend** : ne pas demander à l'utilisateur de
+  trancher des questions abstraites. Lui montrer d'abord l'outil en marche,
+  puis poser les questions sur ce qu'il a vu.
+- **Idée notée, pas faite : une simulation de bout en bout sur les fixtures**,
+  avant même les vrais exports. Lancer `list` et `convert` sur
+  `tests/fixtures/`, montrer les `.md` produits (avec et sans avertissement),
+  puis ouvrir la web app. Le but : que l'utilisateur voie l'outil fonctionner
+  avant d'avoir à décider quoi que ce soit.
+- **Priorité de l'utilisateur** : un maximum de faits, et qu'ils soient
+  documentés. L'outil doit être propre.
+- **Seule action qui lui revient et ne demande aucune décision** : T1, demander
+  les exports ChatGPT et Claude.
+
 ## Où on en est (2026-10-05)
 
 **Un prototype complet tourne**, sur le mode « import d'export » uniquement :
@@ -111,3 +130,6 @@ python3 -m venv .venv && .venv/bin/pip install -e .
   où on peut les trancher (avant l'usage, provisoires au déploiement, après la
   prise en main). La spec 004 autorise un déploiement provisoire avec Tailscale
   et téléchargement manuel (ADR 0004). T2 reste en local, avant le VPS.
+  Faits vérifiés : 30 tests OK (`PYTHONPATH=src`), dépôt propre. PR #1
+  fusionnée. Ajout de la section « Pour reprendre le fil » ; simulation sur
+  fixtures proposée, reportée.
