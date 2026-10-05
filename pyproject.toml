@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arbitrage-trail"
+version = "0.1.0"
+description = "Sauvegarder des conversations génératives en Markdown. Rien n'est perdu."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+arbitrage-trail = "arbitrage_trail.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+arbitrage_trail = ["static/*.html"]

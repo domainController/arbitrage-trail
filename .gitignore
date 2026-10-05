@@ -1,0 +1,10 @@
+__pycache__/
+*.egg-info/
+.venv/
+build/
+dist/
+# Jamais de vraies conversations dans le dépôt.
+exports/
+vault/
+*.zip
+!tests/fixtures/**

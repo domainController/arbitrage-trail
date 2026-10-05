@@ -1,0 +1,21 @@
+[Unit]
+Description=Arbitrage Trail (conversations -> Markdown)
+After=network.target
+
+[Service]
+User=arbitrage
+Group=arbitrage
+# Optionnel : ARBITRAGE_USER / ARBITRAGE_PASSWORD (option C), ARBITRAGE_MAX_MB
+EnvironmentFile=-/etc/arbitrage-trail.env
+ExecStart=/srv/arbitrage-trail/.venv/bin/arbitrage-trail serve --host 127.0.0.1 --port 8765 --vault /srv/vault/Arbitrage-Trail
+Restart=on-failure
+
+# Durcissement : l'app n'a besoin d'écrire que dans le vault.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/vault/Arbitrage-Trail
+
+[Install]
+WantedBy=multi-user.target

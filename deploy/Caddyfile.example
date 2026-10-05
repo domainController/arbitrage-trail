@@ -1,0 +1,11 @@
+# Option C uniquement (accès public). Avec Tailscale (option B), Caddy est inutile.
+# Caddy obtient le certificat HTTPS automatiquement pour ce domaine.
+# Le mot de passe est géré par l'app : définir ARBITRAGE_USER et
+# ARBITRAGE_PASSWORD dans /etc/arbitrage-trail.env.
+
+trail.exemple.fr {
+	request_body {
+		max_size 500MB
+	}
+	reverse_proxy 127.0.0.1:8765
+}

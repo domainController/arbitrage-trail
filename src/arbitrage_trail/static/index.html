@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arbitrage Trail</title>
+<style>
+  :root { --bg:#fafaf8; --fg:#1d1d1b; --muted:#6b6b66; --line:#e2e1dc; --accent:#3b5bdb; --warn:#b35c00; --card:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ecebe6; --muted:#9a9993; --line:#2d2d2a; --accent:#8ea2ff; --warn:#f0a050; --card:#1e1e1c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  #drop { border: 2px dashed var(--line); border-radius: 10px; padding: 32px 16px; text-align: center; cursor: pointer; background: var(--card); }
+  #drop.over { border-color: var(--accent); }
+  #drop small { display:block; color: var(--muted); margin-top: 6px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin: 16px 0; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  input[type=search] { font: inherit; flex:1; min-width: 160px; padding: 6px 10px; border-radius: 6px; border:1px solid var(--line); background: var(--card); color: var(--fg); }
+  #status { color: var(--muted); min-height: 1.5em; }
+  #status.err { color: #c92a2a; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { background: var(--card); border:1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; display:flex; gap: 12px; align-items: flex-start; }
+  li .meta { flex:1; min-width:0; }
+  li .t { font-weight: 600; overflow-wrap: anywhere; }
+  li .d { color: var(--muted); font-size: .875rem; }
+  li .w { color: var(--warn); font-size: .875rem; }
+  li label { display:flex; gap:12px; flex:1; min-width:0; cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Arbitrage Trail</h1>
+  <p class="sub">Rien n'est perdu. Export ChatGPT ou Claude → un fichier Markdown par conversation.</p>
+
+  <div id="drop" tabindex="0">
+    <strong>Dépose ici ton export</strong> (zip ou <code>conversations.json</code>), ou touche pour choisir
+    <small>Le fichier est converti par ce serveur et n'est pas conservé.</small>
+    <input id="file" type="file" accept=".zip,.json,application/zip,application/json" hidden>
+  </div>
+
+  <p id="status"></p>
+
+  <div id="results" hidden>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Filtrer par titre…">
+      <button id="all">Tout cocher</button>
+      <button id="zip" class="primary">Télécharger (.zip)</button>
+      <button id="vault" hidden>Enregistrer dans le vault</button>
+    </div>
+    <ul id="list"></ul>
+  </div>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+let file = null, convs = [], vaultEnabled = false;
+
+fetch('/api/config').then(r => r.json()).then(c => { vaultEnabled = c.vault; }).catch(() => {});
+
+function status(msg, err) { const s = $('#status'); s.textContent = msg; s.className = err ? 'err' : ''; }
+
+function selectedIds() { return [...document.querySelectorAll('#list input:checked')].map(i => i.value); }
+
+function qs(format) {
+  const p = new URLSearchParams({ format });
+  selectedIds().forEach(id => p.append('id', id));
+  return p.toString();
+}
+
+async function convert(f) {
+  file = f;
+  status('Conversion de ' + f.name + '…');
+  const r = await fetch('/api/convert?format=json', { method: 'POST', body: f });
+  const data = await r.json().catch(() => ({ error: 'réponse illisible' }));
+  if (!r.ok) { status(data.error || ('Erreur ' + r.status), true); return; }
+  convs = data.conversations;
+  const warn = convs.filter(c => c.warnings.length).length;
+  status(convs.length + ' conversation(s)' + (warn ? ', dont ' + warn + ' avec avertissement' : '') + '.');
+  render();
+  $('#results').hidden = false;
+  $('#vault').hidden = !vaultEnabled;
+}
+
+function render() {
+  const q = $('#q').value.toLowerCase();
+  const ul = $('#list'); ul.innerHTML = '';
+  for (const c of convs) {
+    if (q && !c.title.toLowerCase().includes(q)) continue;
+    const li = document.createElement('li');
+    const label = document.createElement('label');
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = c.id; cb.checked = true;
+    const meta = document.createElement('div'); meta.className = 'meta';
+    const t = document.createElement('div'); t.className = 't'; t.textContent = c.title;
+    const d = document.createElement('div'); d.className = 'd';
+    d.textContent = (c.created ? c.created.slice(0, 10) : 'sans date') + ' · ' + c.source + ' · ' + c.messages + ' messages';
+    meta.append(t, d);
+    for (const w of c.warnings) { const e = document.createElement('div'); e.className = 'w'; e.textContent = '⚠ ' + w; meta.append(e); }
+    label.append(cb, meta);
+    const dl = document.createElement('button'); dl.textContent = '.md';
+    dl.onclick = () => download(new Blob([c.markdown], { type: 'text/markdown' }), c.filename);
+    li.append(label, dl);
+    ul.append(li);
+  }
+}
+
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$('#drop').onclick = () => $('#file').click();
+$('#drop').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') $('#file').click(); };
+$('#file').onchange = (e) => e.target.files[0] && convert(e.target.files[0]);
+['dragover', 'dragenter'].forEach(ev => $('#drop').addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => $('#drop').addEventListener(ev, e => { e.preventDefault(); $('#drop').classList.remove('over'); }));
+$('#drop').addEventListener('drop', e => e.dataTransfer.files[0] && convert(e.dataTransfer.files[0]));
+$('#q').oninput = render;
+$('#all').onclick = () => {
+  const boxes = [...document.querySelectorAll('#list input')];
+  const on = !boxes.every(b => b.checked);
+  boxes.forEach(b => b.checked = on);
+};
+$('#zip').onclick = async () => {
+  if (!selectedIds().length) return status('Rien de coché.', true);
+  status('Préparation du zip…');
+  const r = await fetch('/api/convert?' + qs('zip'), { method: 'POST', body: file });
+  if (!r.ok) return status('Erreur ' + r.status, true);
+  download(await r.blob(), 'arbitrage-trail.zip');
+  status(selectedIds().length + ' fichier(s) téléchargé(s).');
+};
+$('#vault').onclick = async () => {
+  if (!selectedIds().length) return status('Rien de coché.', true);
+  const r = await fetch('/api/convert?' + qs('vault'), { method: 'POST', body: file });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) return status(data.error || ('Erreur ' + r.status), true);
+  status(data.written.length + ' fichier(s) écrit(s) dans le vault.');
+};
+</script>
+</body>
+</html>

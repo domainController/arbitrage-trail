@@ -1,0 +1,47 @@
+[
+  {
+    "uuid": "c0ffee00-3333-4c4d-9e5f-cccccccccccc",
+    "name": "Régime borné / non borné",
+    "created_at": "2026-10-03T18:00:00.000000Z",
+    "updated_at": "2026-10-03T18:30:00.000000Z",
+    "chat_messages": [
+      {
+        "uuid": "a1",
+        "sender": "human",
+        "text": "Arbitrage Trail est-il vraiment borné ?",
+        "content": [{"type": "text", "text": "Arbitrage Trail est-il vraiment borné ?"}],
+        "created_at": "2026-10-03T18:00:05.000000Z",
+        "attachments": [{"file_name": "fondation.md", "extracted_content": "..."}],
+        "files": []
+      },
+      {
+        "uuid": "a2",
+        "sender": "assistant",
+        "text": "",
+        "content": [
+          {"type": "thinking", "thinking": "Distinguer import d'export et récupération par URL."},
+          {"type": "text", "text": "## Oui et non\n\nL'import d'export est borné ; la récupération par URL ne l'est pas."},
+          {"type": "tool_use", "name": "web_search", "input": {}},
+          {"type": "tool_result", "content": []},
+          {"type": "mystery_block"}
+        ],
+        "created_at": "2026-10-03T18:00:30.000000Z",
+        "attachments": [],
+        "files": []
+      },
+      {
+        "uuid": "a3",
+        "sender": "human",
+        "text": "Merci.",
+        "created_at": "2026-10-03T18:01:00.000000Z"
+      }
+    ]
+  },
+  {
+    "uuid": "deadbeef-4444-4d5e-8f60-dddddddddddd",
+    "name": "",
+    "created_at": "2026-09-01T09:00:00Z",
+    "updated_at": "2026-09-01T09:00:00Z",
+    "chat_messages": []
+  }
+]
